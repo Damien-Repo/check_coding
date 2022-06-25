@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-from .loader import Loader, ILoaderLine
+from loaders.iloader import ILoader, ILoaderLine
 
 
 class LoaderLineRaw(ILoaderLine):
@@ -9,8 +7,8 @@ class LoaderLineRaw(ILoaderLine):
         return self.line.replace('\n', '')
 
 
-class LoaderRaw(Loader):
-
+class LoaderRaw(ILoader):
+    NAME = 'raw'
     LOADER_LINE = LoaderLineRaw
     REMOVE_EMPTY_LINE = False
 
@@ -19,6 +17,5 @@ class LoaderRaw(Loader):
             for line in f.readlines():
                 self.append_line(line)
 
-
-if __name__ == '__main__':
-    pass
+    def __getitem__(self, line_num):
+        return super().__getitem__(line_num)[0]

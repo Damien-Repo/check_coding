@@ -1,19 +1,17 @@
-#!/usr/bin/env python
-
 import subprocess
 
-from .loader import Loader, ILoaderLine
+from loaders.iloader import ILoader, ILoaderLine
 
 
-class LoaderLinePP(ILoaderLine):
+class LoaderLineCPP(ILoaderLine):
 
     def __str__(self):
         return self.line.replace('\n', '')
 
 
-class LoaderPP(Loader):
-
-    LOADER_LINE = LoaderLinePP
+class LoaderCPP(ILoader):
+    NAME = 'cpp'
+    LOADER_LINE = LoaderLineCPP
     CPP_FLAGS = ''
 
     @property
@@ -54,9 +52,6 @@ class LoaderPP(Loader):
                 line_num += line_inc
 
 
-class LoaderPPKeepComment(LoaderPP):
+class LoaderCPPKeepComment(LoaderCPP):
+    NAME = 'cpp_comment'
     CPP_FLAGS = '-CC'
-
-
-if __name__ == '__main__':
-    pass

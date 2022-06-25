@@ -1,19 +1,11 @@
-#!/usr/bin/env python
-
 from tqdm import tqdm
 from contextlib import contextmanager
 
-
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+from lib.utils import Singleton
+from lib.source_file import AllSourceLine
 
 
-class OutputLog(metaclass=Singleton):
+class Log(metaclass=Singleton):
 
     def __init__(self, quiet=False):
         self._quiet = quiet
@@ -76,5 +68,9 @@ class OutputLog(metaclass=Singleton):
         for line, res in sorted(result.items()):
             for checker, check in sorted(res.items()):
                 for check_name, check_res in sorted(check.items()):
-                    self.print(f'{src_file}:{line}:{checker}->{check_name}: {check_res["message"]}')
-                    self.print(f'\x1B[31;1m  {check_res["line"].raw}\x1B[0m')
+                    self.print(f'\x1B[34;1m{src_file}\x1B[0m:'
+                               f'\x1B[33;1m{line}\x1B[0m:'
+                               f'\x1B[36;1m{checker}->{check_name}\x1B[0m: '
+                               f'\x1B[31;1m{check_res["message"]}\x1B[0m')
+                    if isinstance(check_res['line'], AllSourceLine):
+                        self.print(f'  {check_res["line"].raw}')

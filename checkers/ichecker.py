@@ -1,20 +1,18 @@
-#!/usr/bin/env python
-
-from log import OutputLog
+from lib.log import Log
+from lib.config import Config
 
 
 class CheckError(Exception):
     pass
 
-from time import sleep
-
 
 class IChecker:
 
-    checks = {}
+    _checks = {}
 
-    def __init__(self, source_file):
-        self._source_file = source_file
+    def __init__(self, config=Config):
+        self.config = config
+        self._source_file = None
         self._result = []
 
     @property
@@ -29,10 +27,17 @@ class IChecker:
             except CheckError as e:
                 self._result.append((function.__name__, src, e))
 
-        if mode not in IChecker.checks:
-            IChecker.checks[mode] = {}
-        IChecker.checks[mode][function.__name__] = wrapper
+        module = function.__globals__['__name__']
+        if module not in IChecker._checks:
+            IChecker._checks[module] = {}
+        if mode not in IChecker._checks[module]:
+            IChecker._checks[module][mode] = {}
+        IChecker._checks[module][mode][function.__name__] = wrapper
         return wrapper
+
+    @property
+    def checks(self):
+        return IChecker._checks[self.__class__.__module__]
 
     @staticmethod
     def check_line(function):
@@ -45,22 +50,25 @@ class IChecker:
         return IChecker._check_decorator(function, 'file')
 
     def _check_by_file(self):
-        with OutputLog().progress('Checking file', len(IChecker.checks['file']), 'checks') as log:
-            for identifier, check in IChecker.checks['file'].items():
+        with Log().progress('Checking file', len(self.checks['file']), 'checks') as log:
+            for identifier, check in self.checks['file'].items():
                 log.progress_set_name(f'{identifier}')
                 check(self, self.src)
                 log.progress_update()
 
     def _check_by_line(self):
-        with OutputLog().progress('Checking lines', len(self.src) + len(IChecker.checks['line']), 'checks') as log:
+        with Log().progress('Checking lines', len(self.src) + len(self.checks['line']), 'checks') as log:
             for i, src_line in enumerate(self.src):
-                for identifier, check in IChecker.checks['line'].items():
+                for identifier, check in self.checks['line'].items():
                     log.progress_set_name(f'{i}:{identifier}')
                     check(self, src_line)
                     log.progress_update()
 
-    def process(self):
-        for mode in IChecker.checks:
+    def process(self, source_file):
+        self._source_file = source_file
+        self._result = []
+
+        for mode in self.checks:
             getattr(self, f'_check_by_{mode}', lambda: None)()
 
     def get_result(self):

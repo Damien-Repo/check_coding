@@ -1,60 +1,41 @@
-import sys
 import os
-import importlib
-import importlib.util
 
-from log import OutputLog
-from time import sleep   #//TEMP
+from lib.log import Log
+from lib.utils import PluginManager
+
+from checkers.ichecker import IChecker
+from lib.source_file import SourceFile
 
 
-class Checkers:
+class CheckerManager(PluginManager):
 
-    def __init__(self):
-        self._checkers = []
-        self._result = []
-
-        spec = importlib.util.find_spec('checkers.custom.base')   #//TEMP parcourir folder pour find all
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        classes = [c for c in module.__dict__.keys() if c.startswith('Checker')]
-        for c in classes:
-            self._checkers.append(getattr(module, c))
-        '''
-        p = sys.modules['checkers'].__path__[0]
-        print(os.listdir(p))
-        for f in os.listdir(p):
-            if f.startswith('__'):
-                continue
-            fp = os.path.join(p, f)
-            if not os.path.isdir(fp):
-                continue
-            print(fp)
-        checkers = [k.replace('checkers.', '') for k in sys.modules.keys() if k.startswith('checkers.')]
-        print(checkers)
-        '''
-        #print(self._checkers)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._load_plugins(IChecker, os.path.join('checkers', 'default'), 'checker_')
+        self._load_plugins(IChecker, os.path.join(self.config.CUSTOM_ROOT_PATH, 'checkers'), 'checker_')
 
     def process(self, src_file):
-        self._result = []
-        with OutputLog().progress('Check', len(self._checkers), ' checker') as log:
-            for Checker in self._checkers:
-                log.progress_set_name(Checker.__name__)
-                c = Checker(src_file)
-                c.process()
-                self._result.append(c)
+        with Log().progress('Check', len(self), ' checker') as log:
+            for checker_name, checker in self:
+                log.progress_set_name(checker_name)
+                checker.process(src_file)
                 log.progress_update()
 
     def get_result(self):
         out_res = {}
-        for checker in self._result:
-            checker_name = checker.__class__.__name__
+        for checker_name, checker in self:
             for check_name, src_line, msg in checker.get_result():
-                if src_line.row not in out_res:
-                    out_res[src_line.row] = {}
-                if checker_name not in out_res[src_line.row]:
-                    out_res[src_line.row][checker_name] = {}
-                assert(check_name not in out_res[src_line.row][checker_name])
-                out_res[src_line.row][checker_name][check_name] = {
+                if isinstance(src_line, SourceFile):
+                    row = 0
+                else:
+                    row = src_line.row
+
+                if row not in out_res:
+                    out_res[row] = {}
+                if checker_name not in out_res[row]:
+                    out_res[row][checker_name] = {}
+                assert(check_name not in out_res[row][checker_name])
+                out_res[row][checker_name][check_name] = {
                     'message': msg,
                     'line': src_line,
                 }
