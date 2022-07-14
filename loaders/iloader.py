@@ -1,5 +1,3 @@
-from lib.config import Config
-
 
 class ILoaderLine:
 
@@ -25,17 +23,19 @@ class LoaderLineDefault(ILoaderLine):
 
 
 class ILoader:
+    NAME = 'Unnamed'
     LOADER_LINE = LoaderLineDefault
     REMOVE_EMPTY_LINE = True
 
-    def __init__(self, config=Config):
-        self.config = config
-        self._file_name = ''
+    CHECK_BY = {}
+
+    def __init__(self):
+        self.file = None
         self._data = {}
 
     @property
     def file_name(self):
-        return self._file_name
+        return self.file.name
 
     def append_line(self, line, line_num=None):
         if self.REMOVE_EMPTY_LINE and not line.strip():
@@ -48,8 +48,8 @@ class ILoader:
             self._data[line_num] = []
         self._data[line_num].append(loader_line)
 
-    def parse(self, file_name):
-        self._file_name = file_name
+    def parse(self, file):
+        self.file = file
         self._data = {}
         self._parse()
 

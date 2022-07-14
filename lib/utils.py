@@ -1,8 +1,6 @@
 import os
 import importlib
 
-from lib.config import Config
-
 
 class Singleton(type):
     _instances = {}
@@ -15,8 +13,7 @@ class Singleton(type):
 
 class PluginManager(metaclass=Singleton):
 
-    def __init__(self, config=Config):
-        self.config = config
+    def __init__(self):
         self._plugins = {}
 
     def _load_plugins(self, plugin_cls: type, plugins_folder: str = '', prefix: str = '') -> None:
@@ -36,7 +33,10 @@ class PluginManager(metaclass=Singleton):
                     cls = getattr(module, name)
                     if isinstance(cls, type) and issubclass(cls, plugin_cls) and cls != plugin_cls:
                         key = getattr(cls, 'NAME', name)
-                        self._plugins[key] = cls()
+                        try:
+                            self._plugins[key] = cls()
+                        except AssertionError:
+                            pass
 
     def __getattr__(self, item):
         return self._plugins[item]
