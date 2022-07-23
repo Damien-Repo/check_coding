@@ -20,7 +20,7 @@ class IConfigLoader:
     @classmethod
     def dump(cls, conf):
         def _rec(data: dict, indent=0):
-            out = f'{" " * indent}class {list(data.keys())[0]}:\n'
+            out = f'{" " * indent}{list(data.keys())[0]}:\n'
             for members in data.values():
                 for k, v in members.items():
                     if isinstance(v, dict):
@@ -28,7 +28,7 @@ class IConfigLoader:
                     else:
                         out += f'{" " * indent} - {k} = {repr(v)}\n'
             return out
-        return _rec(conf.dump_data())
+        return _rec(conf.dump_data())[:-1]  # [:-1] to remove useless last '\n'
 
 
 class ConfigManager(PluginManager):

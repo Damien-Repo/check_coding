@@ -1,5 +1,6 @@
 from lib.log import Log
 from lib.icheck_exception import ICheckException, CheckExceptionList
+from lib.config import Config
 
 
 class IChecker:
@@ -39,7 +40,16 @@ class IChecker:
 
     @property
     def checks(self):
-        return IChecker._checks[self.__class__.__module__]
+        out = {
+            mode: {
+                name: func
+                for name, func in funcs.items()
+                if Config().Checker.BLACKLIST is None or
+                    f'{self.__class__.__name__}.{name}' not in Config().Checker.BLACKLIST
+            }
+            for mode, funcs in IChecker._checks[self.__class__.__module__].items()
+        }
+        return out
 
     @staticmethod
     def check_by(mode: str):
@@ -48,11 +58,11 @@ class IChecker:
             return IChecker._check_decorator(function, mode)
         return wrapper
 
-    def _run_check_by(self, mode, mode_gen):
-        count = len(list(mode_gen(self.src))) + len(self.checks[mode])
+    def _run_check_by(self, mode, checks, mode_gen):
+        count = len(list(mode_gen(self.src))) + len(checks)
         with Log().progress(f'Checking {mode}s', count, 'checks') as log:
             for i, src_line in enumerate(mode_gen(self.src)):
-                for identifier, check in self.checks[mode].items():
+                for identifier, check in checks.items():
                     log.progress_set_name(f'{i}:{identifier}')
                     check(self, src_line)
                     log.progress_update()
@@ -62,12 +72,12 @@ class IChecker:
         self._result = []
 
         check_by = self.src.loaders.get_check_by()
-        for mode in self.checks:
+        for mode, checks in self.checks.items():
             if mode not in check_by:
                 Log().print(f'You need to use the appropriate loader to use check_by("{mode}") => all checks ignored !')
                 continue
             try:
-                self._run_check_by(mode, check_by[mode])
+                self._run_check_by(mode, checks, check_by[mode])
             except AttributeError as e:
                 Log().error(f'{e}')
 

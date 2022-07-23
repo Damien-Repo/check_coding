@@ -5,6 +5,9 @@ class DefaultConfig(IConfig):
     CUSTOM_ROOT_PATH = 'custom'
 
     class Loader:
+        WHITELIST = []
+        BLACKLIST = []
+
         class Clang:
             LIB_PATH = None
 
@@ -29,4 +32,5 @@ class DefaultConfig(IConfig):
                 src_line_error = ''
 
     class Checker:
-        pass
+        WHITELIST = None
+        BLACKLIST = None

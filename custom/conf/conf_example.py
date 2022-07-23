@@ -2,6 +2,9 @@ from lib.config import DefaultConfig as C
 
 
 class ConfigExample(C):
+    C.Loader.WHITELIST = [
+        'LoaderExample',
+    ]
     C.Loader.Clang.LIB_PATH = '/usr/lib/llvm-10/lib/libclang.so.1'
     C.Loader.Raw.TAB_SIZE = 8
 
@@ -19,6 +22,12 @@ class ConfigExample(C):
     C.Outcome.Tqdm.PrintColors.src_line = ''
     C.Outcome.Tqdm.PrintColors.src_line_error = '\x1B[31m'
 
+    C.Checker.WHITELIST = [
+        'CheckerExample',
+    ]
+    C.Checker.BLACKLIST = [
+        'CheckerExample.check_blacklist',
+    ]
     C.Checker.CheckerExample = {
         'FILE_LENGTH_MAX': 5,
         'PARAM_COUNT_MAX': 4,

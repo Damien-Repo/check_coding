@@ -1,6 +1,12 @@
 import inspect
 
 
+class _CustomSubClass:
+    @classmethod
+    def get(cls, item, default=None):
+        return getattr(cls, item, default)
+
+
 class IConfig:
     @classmethod
     def init_from_data(cls, **kwargs):
@@ -10,7 +16,7 @@ class IConfig:
                 if isinstance(cur_value, type) and isinstance(v, dict):
                     _rec(cur_value, v)
                 elif cur_value is None and isinstance(v, dict):
-                    new_cls = type(k, (object, ), {})
+                    new_cls = type(k, (_CustomSubClass, ), {})
                     setattr(cur_cls, k, new_cls)
                     _rec(new_cls, v)
                 else:

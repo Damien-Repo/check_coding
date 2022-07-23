@@ -2,6 +2,12 @@
   "JSONConfig": {
     "CUSTOM_ROOT_PATH": "custom",
     "Checker": {
+      "WHITELIST": [
+        "CheckerExample"
+      ],
+      "BLACKLIST": [
+        "CheckerExample.check_blacklist"
+      ],
       "CheckerExample": {
         "FILE_LENGTH_MAX": 5,
         "PARAM_COUNT_MAX": 4,
@@ -17,6 +23,9 @@
       }
     },
     "Loader": {
+      "WHITELIST": [
+        "LoaderExample"
+      ],
       "Clang": {
         "LIB_PATH": "/usr/lib/llvm-10/lib/libclang.so.1"
       },

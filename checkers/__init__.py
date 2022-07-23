@@ -12,8 +12,13 @@ class CheckerManager(PluginManager):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._load_plugins(IChecker, os.path.join('checkers', 'default'), 'checker_')
-        self._load_plugins(IChecker, os.path.join(Config().CUSTOM_ROOT_PATH, 'checkers'), 'checker_')
+        extra = {
+            'prefix': 'checker_',
+            'whitelist': Config().Checker.WHITELIST,
+            'blacklist': Config().Checker.BLACKLIST,
+        }
+        self._load_plugins(IChecker, os.path.join('checkers', 'default'), **extra)
+        self._load_plugins(IChecker, os.path.join(Config().CUSTOM_ROOT_PATH, 'checkers'), **extra)
 
     def process(self, src_file):
         with Log().progress('Check', len(self), ' checker') as log:

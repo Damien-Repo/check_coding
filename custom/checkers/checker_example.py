@@ -9,6 +9,10 @@ from checkers.ichecker import IChecker
 class CheckerExample(IChecker):
 
     @IChecker.check_by('file')
+    def check_blacklist(self, _):
+        raise CheckError(f'You should never call this check !!')
+
+    @IChecker.check_by('file')
     def check_file_example(self, src_file):
         Log().print(f'Example check file {src_file}')
         len_max = Config().Checker.CheckerExample.get('FILE_LENGTH_MAX', 1)

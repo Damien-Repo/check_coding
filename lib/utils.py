@@ -17,7 +17,8 @@ class PluginManager(metaclass=Singleton):
     def __init__(self):
         self._plugins = {}
 
-    def _load_plugins(self, plugin_cls: type, plugins_folder: str = '', prefix: str = '') -> None:
+    def _load_plugins(self, plugin_cls: type, plugins_folder: str = '', prefix: str = '',
+                      whitelist=None, blacklist=None) -> None:
         root_path = os.path.dirname(os.path.realpath(__file__))
         plugin_path = os.path.join(os.path.dirname(root_path), plugins_folder)
 
@@ -31,6 +32,9 @@ class PluginManager(metaclass=Singleton):
                 module = importlib.import_module(module_str)
 
                 for name in dir(module):
+                    if (whitelist is not None and name not in whitelist) or \
+                            (blacklist is not None and name in blacklist):
+                        continue
                     cls = getattr(module, name)
                     if isinstance(cls, type) and issubclass(cls, plugin_cls) and cls != plugin_cls:
                         key = getattr(cls, 'NAME', name)
