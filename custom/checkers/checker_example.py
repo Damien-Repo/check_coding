@@ -1,7 +1,9 @@
-from checkers.ichecker import IChecker
+from lib.config import Config
 from lib.log import Log
 from lib.source_file import AllSourceLine
 from lib.icheck_exception import *
+
+from checkers.ichecker import IChecker
 
 
 class CheckerExample(IChecker):
@@ -9,32 +11,26 @@ class CheckerExample(IChecker):
     @IChecker.check_by('file')
     def check_file_example(self, src_file):
         Log().print(f'Example check file {src_file}')
+        len_max = Config().Checker.CheckerExample.get('FILE_LENGTH_MAX', 1)
+        check_exceptions = [CheckInfo, CheckWarning, CheckError]
         with CheckExceptionList().context() as EL:
-            with EL.check():
-                if len(src_file) > 5:
-                    raise CheckInfo('File length > 5')
-
-            with EL.check():
-                if len(src_file) > 10:
-                    raise CheckWarning('File length > 10')
-
-            with EL.check():
-                if len(src_file) > 15:
-                    raise CheckError('File length > 15')
+            for i, Check in enumerate(check_exceptions, start=1):
+                with EL.check():
+                    if len(src_file) > len_max * i:
+                        raise Check(f'File length > {len_max * i}')
 
     @IChecker.check_by('line')
     def check_line_example(self, src_line: AllSourceLine):
-        if src_line.row == 1:
-            raise CheckInfo('Line 1')
-        elif src_line.row == 2:
-            raise CheckWarning('Line 2')
-        elif src_line.row == 3:
-            raise CheckError('Line 3')
+        levels = {'INFO': CheckInfo, 'WARNING': CheckWarning, 'ERROR': CheckError}
+        for lvl, Check in levels.items():
+            lines_error = Config().Checker.CheckerExample.get(f'LINES_{lvl}', [])
+            if src_line.row in lines_error:
+                raise Check(f'Line {src_line.row}')
 
     @IChecker.check_by('function')
     def check_function_example(self, src_line: AllSourceLine):
         params = [x for x in src_line.ast[0].cursor.get_children() if x.kind.name == 'PARM_DECL']
-        param_count_max = 4
+        param_count_max = Config().Checker.CheckerExample.get('PARAM_COUNT_MAX', 0)
         if len(params) > param_count_max:
             start = params[param_count_max].extent.start
             end = params[-1].extent.end

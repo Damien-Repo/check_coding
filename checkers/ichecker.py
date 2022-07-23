@@ -66,7 +66,10 @@ class IChecker:
             if mode not in check_by:
                 Log().print(f'You need to use the appropriate loader to use check_by("{mode}") => all checks ignored !')
                 continue
-            self._run_check_by(mode, check_by[mode])
+            try:
+                self._run_check_by(mode, check_by[mode])
+            except AttributeError as e:
+                Log().error(f'{e}')
 
     def get_result(self):
         return self._result

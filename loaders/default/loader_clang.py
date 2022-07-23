@@ -1,3 +1,4 @@
+import os.path
 import clang.cindex
 
 from loaders.iloader import ILoader, ILoaderLine
@@ -34,6 +35,8 @@ class LoaderASTClang(ILoader):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert(Config().Loader.Clang.LIB_PATH is not None), 'Config.Loader.Clang.LIB_PATH should be set'
+        assert(os.path.exists(Config().Loader.Clang.LIB_PATH)), f'Config.Loader.Clang.LIB_PATH file should be exists' \
+                                                                f' ("{Config().Loader.Clang.LIB_PATH}")'
         clang.cindex.Config.set_library_file(Config().Loader.Clang.LIB_PATH)
 
     def _parse(self):

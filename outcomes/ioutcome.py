@@ -15,6 +15,15 @@ class IOutcome:
     def print(self, msg, *args, **kwargs):
         pass
 
+    def error(self, msg):
+        pass
+
+    def warning(self, msg):
+        pass
+
+    def info(self, msg):
+        pass
+
     def progress_start(self, title='', total_size=None, unit='', *args, **kwargs):
         pass
 

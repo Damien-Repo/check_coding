@@ -1,4 +1,5 @@
 import os
+import sys
 import importlib
 
 
@@ -35,8 +36,9 @@ class PluginManager(metaclass=Singleton):
                         key = getattr(cls, 'NAME', name)
                         try:
                             self._plugins[key] = cls()
-                        except AssertionError:
-                            pass
+                        except AssertionError as e:
+                            print(f'\nWarning: failed to load plugin "{key}" as {plugin_cls.__name__} ({e})',
+                                  file=sys.stderr)
 
     def __getattr__(self, item):
         return self._plugins[item]

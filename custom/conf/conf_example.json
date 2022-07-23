@@ -1,0 +1,47 @@
+{
+  "JSONConfig": {
+    "CUSTOM_ROOT_PATH": "custom",
+    "Checker": {
+      "CheckerExample": {
+        "FILE_LENGTH_MAX": 5,
+        "PARAM_COUNT_MAX": 4,
+        "LINES_INFO": [
+          1
+        ],
+        "LINES_WARNING": [
+          2
+        ],
+        "LINES_ERROR": [
+          3
+        ]
+      }
+    },
+    "Loader": {
+      "Clang": {
+        "LIB_PATH": "/usr/lib/llvm-10/lib/libclang.so.1"
+      },
+      "Raw": {
+        "TAB_SIZE": 8
+      }
+    },
+    "Outcome": {
+      "Tqdm": {
+        "PrintColors": {
+          "check_name": "\u001b[36;1m",
+          "checker_name": "\u001b[36;1m",
+          "level": {
+            "ERRO": "\u001b[37;41m",
+            "WARN": "\u001b[37;43m",
+            "INFO": "\u001b[37;46m"
+          },
+          "line": "\u001b[33;1m",
+          "message": "\u001b[31;1m",
+          "none": "\u001b[0m",
+          "src_file_name": "\u001b[34;1m",
+          "src_line": "",
+          "src_line_error": "\u001b[31m"
+        }
+      }
+    }
+  }
+}

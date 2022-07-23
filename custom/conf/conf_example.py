@@ -18,3 +18,11 @@ class ConfigExample(C):
     C.Outcome.Tqdm.PrintColors.message = '\x1B[31;1m'
     C.Outcome.Tqdm.PrintColors.src_line = ''
     C.Outcome.Tqdm.PrintColors.src_line_error = '\x1B[31m'
+
+    C.Checker.CheckerExample = {
+        'FILE_LENGTH_MAX': 5,
+        'PARAM_COUNT_MAX': 4,
+        'LINES_INFO': [1],
+        'LINES_WARNING': [2],
+        'LINES_ERROR': [3],
+    }

@@ -10,7 +10,10 @@ from outcomes.ioutcome import IOutcome
 class OutcomeTqdm(IOutcome):
 
     def __init__(self):
-        self._progress_steps = []
+        self._progress_steps = [tqdm(leave=False)]
+
+    def __del__(self):
+        self._cur_step.close()
 
     @property
     def _cur_step(self):
@@ -31,7 +34,17 @@ class OutcomeTqdm(IOutcome):
         #//TEMP https://stackoverflow.com/questions/17772255/python-write-colored-text-in-file
         self._cur_step.write(str(msg), file=file)
 
-    def _format_exception_header(self, exc):
+    def error(self, msg):
+        self.print(f'Error: {msg}', file=sys.stderr)
+
+    def warning(self, msg):
+        self.print(f'Warning: {msg}', file=sys.stderr)
+
+    def info(self, msg):
+        self.print(f'Info: {msg}', file=sys.stderr)
+
+    @staticmethod
+    def _format_exception_header(exc):
         colors = Config().Outcome.Tqdm.PrintColors
         return f'[{colors.level.get(exc.level_str, "")}{exc.level_str}{colors.none}]' \
                f'{colors.src_file_name}{exc.src_file_name}{colors.none}:' \
@@ -39,7 +52,8 @@ class OutcomeTqdm(IOutcome):
                f'{colors.checker_name}{exc.checker_name}->{colors.check_name}{exc.check_name}{colors.none}: ' \
                f'{colors.message}{str(exc)}{colors.none}'
 
-    def _format_exception_body(self, exc):
+    @staticmethod
+    def _format_exception_body(exc):
         colors = Config().Outcome.Tqdm.PrintColors
         out = ''
         src_line = exc.src_line
