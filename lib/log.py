@@ -3,10 +3,9 @@ import inspect
 from contextlib import contextmanager
 
 from lib.utils import Singleton
-from lib.config import Config
 
-from outcomes import OutcomeManager
-from outcomes.ioutcome import IOutcome
+from lib.outcomes import OutcomeManager
+from lib.outcomes import IOutcome
 
 
 class Log(metaclass=Singleton):
@@ -18,11 +17,6 @@ class Log(metaclass=Singleton):
                                     for name, _ in inspect.getmembers(IOutcome, predicate=inspect.isfunction)
                                     if not name.startswith('_')]
 
-        self.initialize()
-
-    def __del__(self):
-        self.finalize()
-
     def __getattr__(self, item):
         if item not in self._outcomes_func_name:
             return getattr(self, item)
@@ -32,6 +26,9 @@ class Log(metaclass=Singleton):
                 getattr(outcome, item)(*args, **kwargs)
 
         return functor
+
+    def get_outcome(self, name):
+        return self._outcomes[name].get_outcome()
 
     @contextmanager
     def progress(self, *args, **kwargs):

@@ -1,50 +1,29 @@
 import os
 
 from lib.utils import PluginManager, Singleton
-from .default import DefaultConfig
-
-
-class IConfigLoader:
-    DUMP_MODE = 'str'
-
-    @classmethod
-    def check_type(cls, conf_file):
-        if conf_file is None or conf_file == '':
-            return True
-
-    @classmethod
-    def load_from_file(cls, conf_file):
-        assert (cls.check_type(conf_file))
-        return DefaultConfig
-
-    @classmethod
-    def dump(cls, conf):
-        def _rec(data: dict, indent=0):
-            out = f'{" " * indent}{list(data.keys())[0]}:\n'
-            for members in data.values():
-                for k, v in members.items():
-                    if isinstance(v, dict):
-                        out += _rec({k: v}, indent + 1)
-                    else:
-                        out += f'{" " * indent} - {k} = {repr(v)}\n'
-            return out
-        return _rec(conf.dump_data())[:-1]  # [:-1] to remove useless last '\n'
+from .default.default import DefaultConfig
+from .loaders.config_loader_python import ConfigLoaderPython
+from .iconfig import IConfigLoader
 
 
 class ConfigManager(PluginManager):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._load_plugins(IConfigLoader, os.path.join('lib', 'config'), 'config_loader_')
+        self.load_plugins(IConfigLoader, os.path.join('lib', 'config', 'loaders'), 'config_loader_')
 
         self._loaded_conf = None
 
     def load_from_file(self, conf_file):
-        self._loaded_conf = DefaultConfig
-        for name, conf in self:
-            if conf.check_type(conf_file):
-                self._loaded_conf = conf.load_from_file(conf_file)
-                break
+        if conf_file is None:
+            with open(os.path.join('lib', 'config', 'default', 'default.py'), 'r', encoding='utf-8') as f:
+                self._loaded_conf = ConfigLoaderPython().load_from_file(f)
+        else:
+            for _, conf in self:
+                if conf.check_type(conf_file):
+                    self._loaded_conf = conf.load_from_file(conf_file)
+                    break
+
         return self._loaded_conf
 
     def dump(self, mode=None):
@@ -53,16 +32,16 @@ class ConfigManager(PluginManager):
             mode = IConfigLoader.DUMP_MODE
 
         if self._loaded_conf is not None:
-            for name, conf_loader in self:
+            for _, conf_loader in self:
                 if conf_loader.DUMP_MODE == mode:
-                    f = getattr(conf_loader, f'dump', None)
+                    f = getattr(conf_loader, 'dump', None)
                     if f is not None:
                         return f(self._loaded_conf)
 
 
 class Config(metaclass=Singleton):
 
-    def __init__(self, conf_file):
+    def __init__(self, conf_file=None):
         self._manager = ConfigManager()
         self._conf = None
         self.load_from_file(conf_file)
@@ -76,6 +55,14 @@ class Config(metaclass=Singleton):
     def load_from_file(self, conf_file):
         self._conf = self._manager.load_from_file(conf_file)
         assert(self._conf is not None)
+
+    def load_from_data(self, data: dict):
+        assert(data is not None)
+        self._conf.load_from_data(**data)
+
+    def update_from_data(self, data: dict):
+        assert(data is not None)
+        self._conf.load_from_data(force=True, **data)
 
     def dump(self, mode='str'):
         return self._manager.dump(mode)

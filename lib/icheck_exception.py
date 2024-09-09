@@ -5,18 +5,20 @@ from lib.source_file import AllSourceLine, SourceFile, SourceFilePos
 
 class ICheckException(Exception):
     LEVEL = '00_NONE'
-    config = None
 
-    def __init__(self, message, error_pos=None, context_pos=None, src_line=None):
+    def __init__(self, message, message_details=None, error_pos=None, context_pos=None, src_line=None):
         super().__init__(message)
 
         def create_pos(pos):
             if isinstance(pos, dict):
                 return SourceFilePos(**pos)
+            elif isinstance(pos, (tuple, list)):
+                return SourceFilePos(*pos)
             elif isinstance(pos, SourceFilePos):
                 return pos
             return SourceFilePos()
 
+        self._message_details = message_details
         self._error_pos = create_pos(error_pos)
         self._context_pos = create_pos(context_pos)
         self.src_line = src_line
@@ -25,13 +27,28 @@ class ICheckException(Exception):
     def __cmp__(self, other):
         return self.level.cmp(other.level)
 
+    def __eq__(self, other):
+        return (
+                self.args == other.args and
+                self.error_pos == other.error_pos and
+                self.checker_name == other.checker_name and
+                self.check_name == other.check_name
+        )
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}{self.error_pos}('{self.args[0]}')"
+
     @property
-    def pos(self):
-        return self._context_pos
+    def message_details(self):
+        return self._message_details
 
     @property
     def error_pos(self):
         return self._error_pos
+
+    @property
+    def pos(self):
+        return self._context_pos
 
     @property
     def src_line(self):
@@ -40,7 +57,7 @@ class ICheckException(Exception):
     @src_line.setter
     def src_line(self, value):
         if isinstance(value, AllSourceLine) and self.pos.line_start == 0:
-            self.pos.line_start = value.row
+            self.pos.line_start = value.line_number
         self._src_line = value
 
     @property
@@ -53,12 +70,20 @@ class ICheckException(Exception):
 
     @property
     def check_name(self):
+        res = getattr(self, '_check_name', None)
+        if res is not None:
+            return res
         return self.__traceback__.tb_next.tb_frame.f_code.co_name
 
     @property
     def src_file_name(self):
-        if isinstance(self.src_line, (AllSourceLine, SourceFile)):
+        assert(isinstance(self.src_line, (AllSourceLine, SourceFile)))
+        if isinstance(self.src_line, AllSourceLine):
+            return self.src_line.source_file.file_name
+
+        if isinstance(self.src_line, SourceFile):
             return self.src_line.file_name
+
         return ''
 
 
